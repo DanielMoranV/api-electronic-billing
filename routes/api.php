@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CompanyController;
+use App\Http\Controllers\Api\InvoiceController;
 
 Route::group([
     'middleware' => 'api',
@@ -18,3 +19,12 @@ Route::group([
 
 
 Route::apiResource('companies', CompanyController::class)->middleware('auth:api');
+
+Route::group([
+    'middleware' => 'auth:api',
+    'prefix' => 'invoices'
+], function ($router) {
+    Route::post('/send', [InvoiceController::class, 'send']);
+    Route::post('/xml', [InvoiceController::class, 'xml']);
+    Route::post('/pdf', [InvoiceController::class, 'pdf']);
+});
