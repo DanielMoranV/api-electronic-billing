@@ -9,7 +9,7 @@ use App\Traits\SunatTrait;
 use Greenter\Report\XmlUtils;
 use Illuminate\Http\Request;
 
-class InvoiceController extends Controller
+class NoteController extends Controller
 {
     use SunatTrait;
     public function send(Request $request)
@@ -29,15 +29,15 @@ class InvoiceController extends Controller
             ->where('ruc', $data['company']['ruc'])
             ->firstOrFail();
 
+
         $this->setTotales($data);
         $this->setLegends($data);
 
         $sunat = new SunatService;
         $see = $sunat->getSee($company);
+        $note = $sunat->getNote($data);
 
-        $invoice = $sunat->getInvoice($data);
-
-        $result = $see->send($invoice);
+        $result = $see->send($note);
 
         $response['xml'] = $see->getFactory()->getLastXml();
         $response['hash'] = (new XmlUtils())->getHashSign($response['xml']);
@@ -67,13 +67,14 @@ class InvoiceController extends Controller
 
         $sunat = new SunatService;
         $see = $sunat->getSee($company);
-        $invoice = $sunat->getInvoice($data);
+        $note = $sunat->getNote($data);
 
-        $response['xml'] = $see->getXmlSigned($invoice);
+        $response['xml'] = $see->getXmlSigned($note);
         $response['hash'] = (new XmlUtils())->getHashSign($response['xml']);
 
         return $response;
     }
+
 
     public function pdf(Request $request)
     {
@@ -96,10 +97,10 @@ class InvoiceController extends Controller
 
         $sunat = new SunatService;
         $see = $sunat->getSee($company);
-        $invoice = $sunat->getInvoice($data);
-        $pdf = $sunat->getHtmlReport($invoice);
+        $note = $sunat->getNote($data);
+        $pdf = $sunat->getHtmlReport($note);
 
-        $sunat->generatePdfReport($invoice);
+        $sunat->generatePdfReport($note);
         return $pdf;
     }
 }

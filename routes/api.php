@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\InvoiceController;
+use App\Http\Controllers\Api\NoteController;
 
 Route::group([
     'middleware' => 'api',
@@ -27,4 +28,13 @@ Route::group([
     Route::post('/send', [InvoiceController::class, 'send']);
     Route::post('/xml', [InvoiceController::class, 'xml']);
     Route::post('/pdf', [InvoiceController::class, 'pdf']);
+});
+
+Route::group([
+    'middleware' => 'auth:api',
+    'prefix' => 'notes'
+], function ($router) {
+    Route::post('/send', [NoteController::class, 'send']);
+    Route::post('/xml', [NoteController::class, 'xml']);
+    Route::post('/pdf', [NoteController::class, 'pdf']);
 });

@@ -10,6 +10,7 @@ use Greenter\Model\Company\Company;
 use Greenter\Model\Sale\FormaPagos\FormaPagoContado;
 use Greenter\Model\Sale\Invoice;
 use Greenter\Model\Sale\Legend;
+use Greenter\Model\Sale\Note;
 use Greenter\Model\Sale\SaleDetail;
 use Greenter\Report\HtmlReport;
 use Greenter\Report\PdfReport;
@@ -36,11 +37,53 @@ class SunatService
         return (new Invoice())
             ->setUblVersion($data['ublVersion'] ?? '2.1')
             ->setTipoOperacion($data['tipoOperacion'] ?? null) // Venta - Catalog. 51
-            ->setTipoDoc($data['tipoDoc'] ?? null) // Factura - Catalog. 01 
+            ->setTipoDoc($data['tipoDoc'] ?? null) // Factura - Catalog. 01
             ->setSerie($data['serie'] ?? null)
             ->setCorrelativo($data['correlativo'] ?? null)
             ->setFechaEmision(new DateTime($data['fechaEmision'] ?? null)) // Zona horaria: Lima
             ->setFormaPago(new FormaPagoContado()) // FormaPago: Contado
+            ->setTipoMoneda($data['tipoMoneda'] ?? null) // Sol - Catalog. 02
+            ->setCompany($this->getCompany($data['company']))
+            ->setClient($this->getClient($data['client']))
+
+            //Mto Operaciones
+            ->setMtoOperGravadas($data['mtoOperGravadas'] ?? null)
+            ->setMtoOperExoneradas($data['mtoOperExoneradas'] ?? null)
+            ->setMtoOperInafectas($data['mtoOperInafectas'] ?? null)
+            ->setMtoOperExportacion($data['mtoOperExportacion'] ?? null)
+            ->setMtoOperGratuitas($data['mtoOperGratuitas'] ?? null)
+
+            //Impuestos
+            ->setMtoIGV($data['mtoIGV'])
+            ->setMtoIGVGratuitas($data['mtoIGVGratuitas'])
+            ->setIcbper($data['icbper'])
+            ->setTotalImpuestos($data['totalImpuestos'])
+
+            //Totales
+            ->setValorVenta($data['valorVenta'])
+            ->setSubTotal($data['subTotal'])
+            ->setRedondeo($data['redondeo'])
+            ->setMtoImpVenta($data['mtoImpVenta'])
+
+            //Productos
+            ->setDetails($this->getDetails($data['details']))
+
+            //Leyendas
+            ->setLegends($this->getLegends($data['legends']));
+    }
+
+    public function getNote($data)
+    {
+        return (new Note)
+            ->setUblVersion($data['ublVersion'] ?? '2.1')
+            ->setTipoDoc($data['tipoDoc'] ?? null) // Factura - Catalog. 01
+            ->setSerie($data['serie'] ?? null)
+            ->setCorrelativo($data['correlativo'] ?? null)
+            ->setFechaEmision(new DateTime($data['fechaEmision'] ?? null)) // Zona horaria: Lima
+            ->setTipDocAfectado($data['tipDocAfectado'] ?? null)
+            ->setNumDocfectado($data['numDocfectado'] ?? null)
+            ->setCodMotivo($data['codMotivo'] ?? null) // Catalog. 09
+            ->setDesMotivo($data['desMotivo'] ?? null)
             ->setTipoMoneda($data['tipoMoneda'] ?? null) // Sol - Catalog. 02
             ->setCompany($this->getCompany($data['company']))
             ->setClient($this->getClient($data['client']))
@@ -105,7 +148,7 @@ class SunatService
     {
         $green_details = [];
 
-        foreach ($details as $detail) {        
+        foreach ($details as $detail) {
             $green_details[] = (new SaleDetail())
                 ->setCodProducto($detail['codProducto'] ?? null)
                 ->setUnidad($detail['unidad'] ?? null) // Unidad - Catalog. 03
@@ -167,7 +210,8 @@ class SunatService
         return $response;
     }
 
-    public function getHtmlReport($invoice){
+    public function getHtmlReport($invoice)
+    {
         $report = new HtmlReport();
 
         $resolver = new DefaultTemplateResolver();
@@ -179,14 +223,14 @@ class SunatService
         $params = [
             'system' => [
                 'logo' => Storage::get($company->logo_path), // Logo de Empresa
-                'hash' => 'qqnr2dN4p/HmaEA/CJuVGo7dv5g=', // Valor Resumen 
+                'hash' => 'qqnr2dN4p/HmaEA/CJuVGo7dv5g=', // Valor Resumen
             ],
             'user' => [
                 'header'     => 'Telf: <b>(01) 123375</b>', // Texto que se ubica debajo de la dirección de empresa
                 'extras'     => [
                     // Leyendas adicionales
-                    ['name' => 'CONDICION DE PAGO', 'value' => 'Efectivo'     ],
-                    ['name' => 'VENDEDOR'         , 'value' => 'GITHUB SELLER'],
+                    ['name' => 'CONDICION DE PAGO', 'value' => 'Efectivo'],
+                    ['name' => 'VENDEDOR', 'value' => 'GITHUB SELLER'],
                 ],
                 'footer' => '<p>Nro Resolucion: <b>3232323</b></p>'
             ]
@@ -204,7 +248,7 @@ class SunatService
 
         $report = new PdfReport($htmlReport);
         // Options: Ver mas en https://wkhtmltopdf.org/usage/wkhtmltopdf.txt
-        $report->setOptions( [
+        $report->setOptions([
             'no-outline',
             'viewport-size' => '1280x1024',
             'page-width' => '21cm',
@@ -219,19 +263,18 @@ class SunatService
         $params = [
             'system' => [
                 'logo' => Storage::get($company->logo_path), // Logo de Empresa
-                'hash' => 'qqnr2dN4p/HmaEA/CJuVGo7dv5g=', // Valor Resumen 
+                'hash' => 'qqnr2dN4p/HmaEA/CJuVGo7dv5g=', // Valor Resumen
             ],
             'user' => [
                 'header'     => 'Telf: <b>(01) 123375</b>', // Texto que se ubica debajo de la dirección de empresa
                 'extras'     => [
                     // Leyendas adicionales
-                    ['name' => 'CONDICION DE PAGO', 'value' => 'Efectivo'     ],
-                    ['name' => 'VENDEDOR'         , 'value' => 'GITHUB SELLER'],
+                    ['name' => 'CONDICION DE PAGO', 'value' => 'Efectivo'],
+                    ['name' => 'VENDEDOR', 'value' => 'GITHUB SELLER'],
                 ],
                 'footer' => '<p>Nro Resolucion: <b>3232323</b></p>'
             ]
         ];
-
         $pdf = $report->render($invoice, $params);
 
         Storage::put('invoices/' . $invoice->getName() . '.pdf', $pdf);
